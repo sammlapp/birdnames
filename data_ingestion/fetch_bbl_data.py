@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Script to fetch BBL (Bird Banding Lab) 4-letter alpha codes from USGS website.
-Based on Tessa Rhinehart's Goldeneye extension code.
+Adapted from Tessa Rhinehart's Goldeneye extension code.
+Note: we'll need to manually update the year in the saved file. I'm not sure we can access
+previous years' data from the USGS site.
 """
 
 import pandas as pd
@@ -43,7 +45,7 @@ def fetch_bbl_data():
         bbl_table["genus"] = bbl_table["scientific_name"].str.split().str[0]
 
         # Save to processed data directory
-        data_dir = Path(__file__).parent / "data" / "processed"
+        data_dir = Path(__file__).parent.parent / "data" / "processed"
         data_dir.mkdir(parents=True, exist_ok=True)
 
         output_file = data_dir / "bbl_2024_taxonomy.csv"

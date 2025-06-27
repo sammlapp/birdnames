@@ -13,6 +13,7 @@ A Python package for managing avian taxonomy and converting between different bi
 
 ## Installation
 
+(until published on PyPI: pip install git+https://github.com/sammlapp/birdnames)
 ```bash
 pip install birdnames
 ```
