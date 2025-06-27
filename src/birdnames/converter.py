@@ -147,7 +147,10 @@ class Converter:
         if not isinstance(s, str):
             return s
         if self.soft_matching:
-            return s.strip().lower()
+            # Replace multiple spaces, dashes, underscores with single space
+            import re
+            normalized = re.sub(r'[-_\s]+', ' ', s)
+            return normalized.strip().lower()
         return s
 
     def _convert_single(self, name: str) -> Optional[str]:
@@ -174,9 +177,10 @@ class Converter:
 
         # Exact match first
         if self.soft_matching:
-            mask = data[from_col].astype(
-                str
-            ).str.lower().str.strip() == self._normalize_string(name)
+            # Apply same normalization to both query and data
+            normalized_query = self._normalize_string(name)
+            normalized_data = data[from_col].astype(str).apply(self._normalize_string)
+            mask = normalized_data == normalized_query
         else:
             mask = data[from_col] == name
 
@@ -243,10 +247,17 @@ class Converter:
 
         # Handle collections
         if isinstance(names, (list, np.ndarray, pd.Series)):
+            # first create a list to hold results
             results = []
             for name in names:
                 result = self._convert_single(name)
                 results.append(result)
-            return results
+            # in returned value, retain original type for consistency
+            if isinstance(names, pd.Series):
+                return pd.Series(results, index=names.index)
+            elif isinstance(names, np.ndarray):
+                return np.array(results)
+            else:
+                return results
 
         raise TypeError(f"Unsupported input type: {type(names)}")

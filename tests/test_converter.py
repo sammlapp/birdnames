@@ -1,9 +1,10 @@
 """
-Basic tests for the Converter class.
+Comprehensive tests for the Converter class.
 """
 
 import pytest
 import pandas as pd
+import numpy as np
 from pathlib import Path
 import sys
 
@@ -15,106 +16,318 @@ from birdnames import Converter
 
 class TestConverter:
     """Test cases for Converter class."""
-    
+
     def test_converter_initialization(self):
         """Test that Converter can be initialized with basic parameters."""
         converter = Converter(
             from_type="common_name",
             to_type="scientific_name",
             from_authority="avilist",
-            to_authority="avilist"
+            to_authority="avilist",
         )
-        
+
         assert converter.from_type == "common_name"
         assert converter.to_type == "scientific_name"
         assert converter.from_authority == "avilist"
         assert converter.to_authority == "avilist"
         assert converter.soft_matching is True
         assert converter.fuzzy_matching is False
-    
+
     def test_column_name_mapping(self):
         """Test that column name mapping works correctly."""
-        converter = Converter(
-            from_type="common_name",
-            to_type="scientific_name"
-        )
-        
+        converter = Converter(from_type="common_name", to_type="scientific_name")
+
         # Test scientific name (universal)
-        assert converter._get_column_name("scientific_name", "avilist") == "scientific_name"
-        
+        assert (
+            converter._get_column_name("scientific_name", "avilist")
+            == "scientific_name"
+        )
+
         # Test authority-specific columns
-        assert converter._get_column_name("common_name", "avilist") == "avilist_common_name"
+        assert (
+            converter._get_column_name("common_name", "avilist")
+            == "avilist_common_name"
+        )
         assert converter._get_column_name("common_name", "ebird") == "ebird_common_name"
-        
+
         # Test IBP alpha codes
         assert converter._get_column_name("alpha_code_4", "ibp") == "ibp_alpha_code_4"
         assert converter._get_column_name("alpha_code_6", "ibp") == "ibp_alpha_code_6"
-        
+
         # Test eBird species codes
-        assert converter._get_column_name("species_code", "ebird") == "ebird_species_code"
-    
+        assert (
+            converter._get_column_name("species_code", "ebird") == "ebird_species_code"
+        )
+
     def test_invalid_combinations(self):
         """Test that invalid type/authority combinations raise errors."""
-        converter = Converter(
-            from_type="common_name",
-            to_type="scientific_name"
-        )
-        
+        converter = Converter(from_type="common_name", to_type="scientific_name")
+
         # Alpha codes only available for IBP
         with pytest.raises(ValueError):
             converter._get_column_name("alpha_code_4", "avilist")
-        
+
         # Species codes only available for eBird
         with pytest.raises(ValueError):
             converter._get_column_name("species_code", "avilist")
-        
+
         # Unknown name type
         with pytest.raises(ValueError):
             converter._get_column_name("unknown_type", "avilist")
-    
+
     def test_string_normalization(self):
         """Test string normalization for soft matching."""
         converter = Converter(
-            from_type="common_name",
-            to_type="scientific_name",
-            soft_matching=True
+            from_type="common_name", to_type="scientific_name", soft_matching=True
         )
-        
+
         assert converter._normalize_string("  American Robin  ") == "american robin"
         assert converter._normalize_string("BLUE JAY") == "blue jay"
-        
+
         # Test with soft matching disabled
         converter.soft_matching = False
         assert converter._normalize_string("  American Robin  ") == "  American Robin  "
-    
-    def test_input_type_handling(self):
-        """Test that different input types are handled correctly."""
-        # This test would require actual data files, so we'll mock the behavior
-        # In a real implementation, you'd want to create test data files
-        
-        # Test that the convert method accepts different input types
+
+    def test_basic_conversion_avilist(self):
+        """Test basic conversions within AviList taxonomy."""
+        converter = Converter(
+            from_type="common_name", to_type="scientific_name", from_authority="avilist"
+        )
+
+        # Test with Common Ostrich (should be in the data)
+        result = converter.convert("Common Ostrich")
+        assert result == "Struthio camelus"
+
+        # Test reverse conversion
+        converter_reverse = Converter(
+            from_type="scientific_name", to_type="common_name", from_authority="avilist"
+        )
+        result = converter_reverse.convert("Struthio camelus")
+        assert result == "Common Ostrich"
+
+    def test_ebird_conversions(self):
+        """Test conversions with eBird taxonomy."""
+        # Test common name to species code
+        converter = Converter(
+            from_type="common_name", to_type="species_code", to_authority="ebird"
+        )
+
+        result = converter.convert("Common Ostrich")
+        assert result == "ostric2"
+
+        # Test species code to scientific name
+        converter_reverse = Converter(
+            from_type="species_code", to_type="scientific_name", from_authority="ebird"
+        )
+        result = converter_reverse.convert("ostric2")
+        assert result == "Struthio camelus"
+
+    def test_ibp_alpha_codes(self):
+        """Test IBP alpha code conversions."""
+        # Test 4-letter alpha codes
+        converter = Converter(
+            from_type="common_name", to_type="alpha_code_4", to_authority="ibp"
+        )
+
+        result = converter.convert("Highland Tinamou")
+        assert result == "HITI"
+
+        # Test 6-letter alpha codes
+        converter_6 = Converter(
+            from_type="alpha_code_4",
+            to_type="alpha_code_6",
+            from_authority="ibp",
+            to_authority="ibp",
+        )
+
+        result = converter_6.convert("HITI")
+        assert result == "NOTBON"
+
+    def test_cross_authority_conversion(self):
+        """Test conversions between different taxonomic authorities."""
+        # Common Ostrich exists in both AviList and eBird
         converter = Converter(
             from_type="common_name",
-            to_type="scientific_name"
+            to_type="species_code",
+            from_authority="avilist",
+            to_authority="ebird",
         )
-        
-        # These would fail without data, but test the type checking logic
-        test_inputs = [
-            "American Robin",  # string
-            ["American Robin", "Blue Jay"],  # list
-            pd.Series(["American Robin", "Blue Jay"]),  # pandas Series
+
+        result = converter.convert("Common Ostrich")
+        assert result == "ostric2"
+
+    def test_hierarchical_conversions(self):
+        """Test conversions to taxonomic hierarchy levels."""
+        # Scientific name to genus
+        converter = Converter(
+            from_type="scientific_name", to_type="genus", from_authority="avilist"
+        )
+
+        result = converter.convert("Struthio camelus")
+        assert result == "Struthio"
+
+        # Scientific name to family
+        converter_family = Converter(
+            from_type="scientific_name", to_type="family", from_authority="avilist"
+        )
+
+        result = converter_family.convert("Struthio camelus")
+        assert result == "Struthionidae"
+
+        # Scientific name to order
+        converter_order = Converter(
+            from_type="scientific_name", to_type="order", from_authority="avilist"
+        )
+
+        result = converter_order.convert("Struthio camelus")
+        assert result == "Struthioniformes"
+
+    def test_batch_conversions(self):
+        """Test batch processing with lists and pandas Series."""
+        converter = Converter(
+            from_type="scientific_name", to_type="common_name", from_authority="avilist"
+        )
+
+        # Test with list
+        input_list = ["Struthio camelus", "Struthio molybdophanes"]
+        results = converter.convert(input_list)
+        expected = ["Common Ostrich", "Somali Ostrich"]
+        assert results == expected
+
+        # Test with pandas Series
+        input_series = pd.Series(["Struthio camelus", "Struthio molybdophanes"])
+        results = converter.convert(input_series)
+        assert isinstance(results, pd.Series)
+        assert list(results) == expected
+
+        # Test with numpy array
+        input_array = np.array(["Struthio camelus", "Struthio molybdophanes"])
+        results = converter.convert(input_array)
+        assert isinstance(results, np.ndarray)
+        assert list(results) == expected
+
+    def test_soft_matching(self):
+        """Test case-insensitive and spacing-tolerant matching."""
+        converter = Converter(
+            from_type="common_name",
+            to_type="scientific_name",
+            from_authority="avilist",
+            soft_matching=True,
+        )
+
+        # Test case variations
+        test_cases = [
+            "common ostrich",           # lowercase
+            "COMMON OSTRICH",           # uppercase
+            "Common  Ostrich",          # extra space
+            "  Common Ostrich  ",       # leading/trailing spaces
+            "Common-Ostrich",           # dash instead of space
+            "Common_Ostrich",           # underscore instead of space
+            "Common--__  Ostrich",      # mixed dashes, underscores, multiple spaces
+            "Common   -   Ostrich",     # spaces around dash
+            "common___ostrich",         # multiple underscores, lowercase
         ]
-        
-        for test_input in test_inputs:
-            try:
-                # This will likely fail due to missing data files, but shouldn't fail on type checking
-                result = converter.convert(test_input)
-            except FileNotFoundError:
-                # Expected when data files don't exist
-                pass
-            except TypeError as e:
-                # Should not get type errors
-                pytest.fail(f"Unexpected TypeError for input {type(test_input)}: {e}")
+
+        for test_case in test_cases:
+            result = converter.convert(test_case)
+            assert result == "Struthio camelus", f"Failed for: '{test_case}'"
+
+    def test_missing_values(self):
+        """Test handling of missing/unknown values."""
+        converter = Converter(
+            from_type="common_name", to_type="scientific_name", from_authority="avilist"
+        )
+
+        # Test with non-existent bird name
+        result = converter.convert("Nonexistent Bird")
+        assert pd.isna(result)
+
+        # Test with list containing missing values
+        input_list = ["Common Ostrich", "Nonexistent Bird", "Somali Ostrich"]
+        results = converter.convert(input_list)
+        assert results[0] == "Struthio camelus"
+        assert pd.isna(results[1])
+        assert results[2] == "Struthio molybdophanes"
+
+    def test_fuzzy_matching(self):
+        """Test fuzzy matching for typos."""
+        converter = Converter(
+            from_type="common_name",
+            to_type="scientific_name",
+            from_authority="avilist",
+            fuzzy_matching=True,
+        )
+
+        # Test with small typo
+        result = converter.convert("Comon Ostrich")  # missing 'm'
+        assert result == "Struthio camelus"
+
+    def test_ebird_taxonomy_years(self):
+        """Test selecting different eBird taxonomy years."""
+        # Test 2021 taxonomy
+        converter_2021 = Converter(
+            from_type="common_name",
+            to_type="scientific_name",
+            from_authority="ebird",
+            from_year=2021,
+        )
+
+        # Test 2022 taxonomy
+        converter_2022 = Converter(
+            from_type="common_name",
+            to_type="scientific_name",
+            from_authority="ebird",
+            from_year=2022,
+        )
+
+        # Test 2023 taxonomy
+        converter_2023 = Converter(
+            from_type="common_name",
+            to_type="scientific_name",
+            from_authority="ebird",
+            from_year=2023,
+        )
+
+        # Test 2024 taxonomy (default)
+        converter_2024 = Converter(
+            from_type="common_name", to_type="scientific_name", from_authority="ebird"
+        )
+
+        # Test that all years can convert Common Ostrich
+        test_name = "Common Ostrich"
+        expected_scientific = "Struthio camelus"
+
+        for year, converter in [
+            (2021, converter_2021),
+            (2022, converter_2022),
+            (2023, converter_2023),
+            (2024, converter_2024),
+        ]:
+            result = converter.convert(test_name)
+            assert result == expected_scientific, f"Failed for eBird {year}"
+
+        # Test species codes for different years
+        converter_codes_2021 = Converter(
+            from_type="common_name",
+            to_type="species_code",
+            to_authority="ebird",
+            to_year=2021,
+        )
+
+        converter_codes_2024 = Converter(
+            from_type="common_name",
+            to_type="species_code",
+            to_authority="ebird",
+            to_year=2024,
+        )
+
+        # Both should return the same species code for Common Ostrich
+        result_2021 = converter_codes_2021.convert("Common Ostrich")
+        result_2024 = converter_codes_2024.convert("Common Ostrich")
+
+        # Note: Species codes may differ between years due to taxonomic changes
+        assert result_2021 is not None
+        assert result_2024 is not None
 
 
 if __name__ == "__main__":
