@@ -60,21 +60,54 @@ class Converter:
         # Load data
         self._load_data()
 
-    def _load_data(self):
-        """Load taxonomy data files."""
+    def _get_most_recent_year(self, authority: str) -> str:
+        """Get the most recent year available for an authority."""
         data_dir = Path(__file__).parent.parent.parent / "data" / "processed"
 
+        # Find all files for this authority
+        authority_files = list(data_dir.glob(f"{authority}_*_taxonomy.csv"))
+
+        if not authority_files:
+            raise FileNotFoundError(
+                f"No taxonomy files found for authority: {authority}"
+            )
+
+        # Extract years and find the most recent
+        years = []
+        for file in authority_files:
+            # File format: authority_year_taxonomy.csv
+            parts = file.stem.split("_")
+            if len(parts) >= 3:  # authority_year_taxonomy
+                year = parts[-2]
+                years.append(year)
+
+        if not years:
+            raise FileNotFoundError(
+                f"No valid year files found for authority: {authority}"
+            )
+
+        # Return the most recent year (assumes numeric years)
+        return max(years)
+
+    def _load_data(self):
+        """Load taxonomy data files based on authority and year."""
+        data_dir = Path(__file__).parent.parent.parent / "data" / "processed"
+
+        # Determine years to use
+        from_year = self.from_year or self._get_most_recent_year(self.from_authority)
+        to_year = self.to_year or self._get_most_recent_year(self.to_authority)
+
         # Load source authority data
-        from_file = data_dir / f"{self.from_authority}_taxonomy.csv"
+        from_file = data_dir / f"{self.from_authority}_{from_year}_taxonomy.csv"
         if not from_file.exists():
             raise FileNotFoundError(f"Taxonomy file not found: {from_file}")
         self.from_data = pd.read_csv(from_file)
 
         # Load target authority data (may be same as source)
-        if self.to_authority == self.from_authority:
+        if self.to_authority == self.from_authority and from_year == to_year:
             self.to_data = self.from_data
         else:
-            to_file = data_dir / f"{self.to_authority}_taxonomy.csv"
+            to_file = data_dir / f"{self.to_authority}_{to_year}_taxonomy.csv"
             if not to_file.exists():
                 raise FileNotFoundError(f"Taxonomy file not found: {to_file}")
             self.to_data = pd.read_csv(to_file)

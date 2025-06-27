@@ -15,12 +15,26 @@ def ingest_ebird_clements(file_path):
 
     df = pd.read_csv(file_path, encoding="utf-8-sig")
 
+    # options for common name column:
+    df = df.rename(
+        columns={
+            "PRIMARY_COM_NAME": "English name",
+            "SCI_NAME": "scientific name",
+            "ORDER1": "order",
+            "FAMILY": "family",
+            
+        }
+    )
+
+    # convert column names to lowercase
+    df.columns = df.columns.str.lower()
+
     # Filter to species only (category == 'species')
     species_df = df[df["category"] == "species"].copy()
 
     # Create standardized output
     output_df = species_df[
-        ["scientific name", "English name", "species_code", "order", "family"]
+        ["scientific name", "english name", "species_code", "order", "family"]
     ].copy()
     output_df.columns = [
         "scientific_name",
@@ -141,54 +155,87 @@ def ingest_avilist(file_path):
     return output_df
 
 
+def discover_taxonomy_files():
+    """Discover all taxonomy files in the taxonomies directory structure."""
+    taxonomies_dir = Path("taxonomies")
+    taxonomy_files = {}
+
+    if not taxonomies_dir.exists():
+        print(f"Warning: {taxonomies_dir} directory not found")
+        return taxonomy_files
+
+    # Walk through authority/year structure
+    for authority_dir in taxonomies_dir.iterdir():
+        if not authority_dir.is_dir():
+            continue
+
+        authority = authority_dir.name
+        taxonomy_files[authority] = {}
+
+        for year_dir in authority_dir.iterdir():
+            if not year_dir.is_dir():
+                continue
+
+            year = year_dir.name
+
+            # Find the first file in the year directory
+            files_in_year = list(year_dir.iterdir())
+            data_files = [
+                f for f in files_in_year if f.is_file() and not f.name.startswith(".")
+            ]
+
+            if data_files:
+                taxonomy_files[authority][year] = data_files[0]
+                print(f"Found {authority} {year}: {data_files[0].name}")
+            else:
+                print(f"Warning: No data files found in {year_dir}")
+
+    return taxonomy_files
+
+
 def main():
     """Main ingestion function."""
-    taxonomies_dir = Path("taxonomies")
     output_dir = Path("data/processed")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # File mappings - updated for new BirdLife file
-    files = {
-        "ebird": taxonomies_dir
-        / "eBird-Clements-v2024-integrated-checklist-October-2024-rev.csv",
-        "ibp": taxonomies_dir / "IBP-AOS-LIST24.csv",
-        "birdlife": taxonomies_dir / "HBW_BirdLife_List of Birds_v.9.xlsx",
-        "avilist": taxonomies_dir / "AviList-v2025-11Jun-extended.xlsx",
-    }
+    # Discover all taxonomy files
+    taxonomy_files = discover_taxonomy_files()
 
-    # Process each taxonomy
-    dataframes = {}
-    for authority, file_path in files.items():
-        if not file_path.exists():
-            print(f"Warning: {file_path} not found, skipping {authority}")
-            continue
+    if not taxonomy_files:
+        print("No taxonomy files found!")
+        return
 
-        try:
-            if authority == "ebird":
-                df = ingest_ebird_clements(file_path)
-            elif authority == "ibp":
-                df = ingest_ibp(file_path)
-            elif authority == "birdlife":
-                df = ingest_birdlife(file_path)
-            elif authority == "avilist":
-                df = ingest_avilist(file_path)
+    # Process each authority and year
+    for authority, years in taxonomy_files.items():
+        print(f"\nProcessing {authority}...")
 
-            # Save individual authority CSV file
-            output_file = output_dir / f"{authority}_taxonomy.csv"
-            df.to_csv(output_file, index=False)
-            print(f"Saved {authority} data to {output_file}")
+        for year, file_path in years.items():
+            print(f"  Processing {authority} {year}: {file_path.name}")
 
-            dataframes[authority] = df
+            try:
+                if authority == "ebird":
+                    df = ingest_ebird_clements(file_path)
+                elif authority == "ibp":
+                    df = ingest_ibp(file_path)
+                elif authority == "birdlife":
+                    df = ingest_birdlife(file_path)
+                elif authority == "avilist":
+                    df = ingest_avilist(file_path)
+                else:
+                    print(f"    Unknown authority: {authority}, skipping")
+                    continue
 
-        except Exception as e:
-            print(f"Error processing {authority}: {e}")
-            continue
+                # Save authority-year specific CSV file
+                output_file = output_dir / f"{authority}_{year}_taxonomy.csv"
+                df.to_csv(output_file, index=False)
+                print(f"    Saved to {output_file}")
+                print(f"    Processed {len(df)} entries")
+
+            except Exception as e:
+                print(f"    Error processing {authority} {year}: {e}")
+                continue
 
     print("\nIngestion complete!")
-
-    # Print summary by authority
-    for authority, df in dataframes.items():
-        print(f"  {authority}: {len(df)} species")
 
 
 if __name__ == "__main__":

@@ -128,6 +128,7 @@ IBP alpha codes: https://www.birdpop.org/pages/birdSpeciesCodes.php (File: IBP-A
 
 BirdLife taxonomy: https://datazone.birdlife.org/about-our-science/taxonomy (File: HBW_BirdLife_List of Birds_v.9.xlsx) columns: Seq.	Order	Family	Family name	Common name	Scientific name	
 2024 IUCN Red List category
+Note: for the 2021 taxonomy I used Microsoft Excel to convert to UTF-8 encoding
 
 Avilist: https://www.avilist.org/checklist/v2025/, download link: https://www.avilist.org/wp-content/uploads/2025/06/AviList-v2025-11Jun-extended.xlsx; File: AviList-v2025-11Jun-extended.xlsx ; 
 Avilist columns: 
@@ -138,5 +139,3 @@ During ingestion:
 "Order" and "Family" columns from Avilist; "Order" and "Family name" columns from BirdLife; "order" and "family" columns
 2. retain the taxonomic rank of the entry (not all entries are species):
 "Taxon_rank" column in avilist
-
-Note: I no longer think its a good idea to merge tables during ingestion, since we want the flexibility to choose which year of any given taxonomy is used. 

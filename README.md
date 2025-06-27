@@ -198,8 +198,8 @@ converter = bn.Converter(
 - `"family"`: Family names (e.g., "Turdidae")
 - `"order"`: Order names (e.g., "Passeriformes")
 - `"alpha_code_4"`: 4-letter alpha codes (IBP only, e.g., "AMRO")
-- `"alpha_code_6"`: 6-letter alpha codes (IBP only, e.g., "AMROBI")
-- `"species_code"`: eBird species codes (eBird only, e.g., "amero")
+- `"alpha_code_6"`: 6-letter alpha codes (IBP only, e.g., "TURMIG")
+- `"species_code"`: eBird 6-letter species codes (eBird only, e.g., "amerob")
 
 ## Supported Taxonomic Authorities
 
@@ -221,7 +221,9 @@ The package integrates data from:
 
 ### Data Ingestion
 
-To update taxonomy data, run the ingestion script:
+We currently support the latest of each taxonomy as of June 2025. We plan to add support for previous taxonomy versions and maintain support for new taxonomy versions in the future. We will provide API methods to specify which year of each taxonomy should be used.
+
+To update taxonomy data used by the package, first update the raw taxonomy files, then run the ingestion script:
 
 ```bash
 python ingest_taxonomies.py
@@ -235,10 +237,6 @@ This will process the raw taxonomy files and create standardized CSV files for t
 pytest tests/
 ```
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## License
 
 MIT License
@@ -248,5 +246,5 @@ MIT License
 If you use this package in your research, please cite:
 
 ```
-BirdNames: A Python package for avian taxonomy management
+Lapp, Sam 2025. BirdNames: A Python package for avian taxonomy management
 ```
