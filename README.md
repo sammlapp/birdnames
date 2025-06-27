@@ -77,6 +77,30 @@ alpha_codes = converter.convert(common_names)
 print(alpha_codes)  # ["AMRO", "BLJA", "NOCA"]
 ```
 
+### BBL Alpha Codes and French Names
+
+```python
+# Convert to BBL 4-letter alpha codes
+converter = bn.Converter(
+    from_type="common_name",
+    to_type="alpha_code_4",
+    to_authority="bbl"
+)
+
+alpha_code = converter.convert("Western Grebe")
+print(alpha_code)  # "WEGR"
+
+# Convert to French names
+converter_french = bn.Converter(
+    from_type="common_name",
+    to_type="french_name",
+    to_authority="bbl"
+)
+
+french_name = converter_french.convert("Western Grebe")
+print(french_name)  # "Grèbe élégant"
+```
+
 ### Common Name to eBird Species Codes
 
 ```python
@@ -190,16 +214,59 @@ converter = bn.Converter(
 )
 ```
 
+### Finding Typos in DataFrames with Fuzzy Matching
+
+```python
+import pandas as pd
+import birdnames as bn
+
+# Create sample data with some typos
+df = pd.DataFrame({
+    'original_name': [
+        'American Robin',      # correct
+        'Amercan Robin',       # typo: missing 'i'
+        'Blue Jay',            # correct
+        'Blu Jay',             # typo: missing 'e'
+        'Northern Cardinal',   # correct
+        'Nothern Cardinal',    # typo: missing 'r'
+        'Red-winged Blackbird', # correct
+        'Red-wingd Blackbird'  # typo: missing 'e'
+    ]
+})
+
+# Use fuzzy matching to find corrected names
+converter = bn.Converter(
+    from_type="common_name",
+    to_type="common_name",
+    from_authority="avilist",
+    fuzzy_matching=True
+)
+
+# Apply fuzzy matching to get corrected names
+df['corrected_name'] = converter.convert(df['original_name'])
+
+# Subset to show only rows with typos
+df[df["original_name"] != df["corrected_name"]]
+
+# Output:
+#     original_name    corrected_name
+# 1    Amercan Robin    American Robin
+# 3          Blu Jay          Blue Jay
+# 5  Nothern Cardinal Northern Cardinal
+# 7 Red-wingd Blackbird Red-winged Blackbird
+```
+
 ## Supported Name Types
 
 - `"scientific_name"`: Scientific/binomial names (e.g., "Turdus migratorius")
 - `"common_name"`: English common names (e.g., "American Robin")
 - `"genus"`: Genus names (e.g., "Turdus")
-- `"family"`: Family names (e.g., "Turdidae")
-- `"order"`: Order names (e.g., "Passeriformes")
-- `"alpha_code_4"`: 4-letter alpha codes (IBP only, e.g., "AMRO")
+- `"family"`: Family names (e.g., "Turdidae") - not available for BBL
+- `"order"`: Order names (e.g., "Passeriformes") - not available for BBL
+- `"alpha_code_4"`: 4-letter alpha codes (IBP and BBL, e.g., "AMRO", "WEGR")
 - `"alpha_code_6"`: 6-letter alpha codes (IBP only, e.g., "TURMIG")
 - `"species_code"`: eBird 6-letter species codes (eBird only, e.g., "amerob")
+- `"french_name"`: French common names (BBL only, e.g., "Grèbe élégant")
 
 ## Supported Taxonomic Authorities
 
@@ -207,6 +274,7 @@ converter = bn.Converter(
 - `"ebird"`: eBird/Clements Checklist
 - `"birdlife"`: BirdLife International taxonomy
 - `"ibp"`: Institute for Bird Populations (North American species)
+- `"bbl"`: Bird Banding Lab (North American species with French names)
 
 ## Data Sources
 
@@ -216,6 +284,7 @@ The package integrates data from:
 - **eBird/Clements**: Cornell Lab's taxonomy with common names and 6-letter species codes
 - **BirdLife International**: Global taxonomy with IUCN Red List status
 - **IBP**: Institute for Bird Populations with 4-letter and 6-letter alpha codes for North American species
+- **BBL**: Bird Banding Lab with 4-letter alpha codes, English and French common names for North American species
 
 ## Development
 

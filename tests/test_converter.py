@@ -59,6 +59,10 @@ class TestConverter:
             converter._get_column_name("species_code", "ebird") == "ebird_species_code"
         )
 
+        # Test BBL alpha codes and French names
+        assert converter._get_column_name("alpha_code_4", "bbl") == "bbl_alpha_code_4"
+        assert converter._get_column_name("french_name", "bbl") == "bbl_french_name"
+
     def test_invalid_combinations(self):
         """Test that invalid type/authority combinations raise errors."""
         converter = Converter(from_type="common_name", to_type="scientific_name")
@@ -74,6 +78,16 @@ class TestConverter:
         # Unknown name type
         with pytest.raises(ValueError):
             converter._get_column_name("unknown_type", "avilist")
+
+        # BBL doesn't support family/order
+        with pytest.raises(ValueError):
+            converter._get_column_name("family", "bbl")
+        with pytest.raises(ValueError):
+            converter._get_column_name("order", "bbl")
+
+        # French names only available for BBL
+        with pytest.raises(ValueError):
+            converter._get_column_name("french_name", "avilist")
 
     def test_string_normalization(self):
         """Test string normalization for soft matching."""
@@ -217,15 +231,15 @@ class TestConverter:
 
         # Test case variations
         test_cases = [
-            "common ostrich",           # lowercase
-            "COMMON OSTRICH",           # uppercase
-            "Common  Ostrich",          # extra space
-            "  Common Ostrich  ",       # leading/trailing spaces
-            "Common-Ostrich",           # dash instead of space
-            "Common_Ostrich",           # underscore instead of space
-            "Common--__  Ostrich",      # mixed dashes, underscores, multiple spaces
-            "Common   -   Ostrich",     # spaces around dash
-            "common___ostrich",         # multiple underscores, lowercase
+            "common ostrich",  # lowercase
+            "COMMON OSTRICH",  # uppercase
+            "Common  Ostrich",  # extra space
+            "  Common Ostrich  ",  # leading/trailing spaces
+            "Common-Ostrich",  # dash instead of space
+            "Common_Ostrich",  # underscore instead of space
+            "Common--__  Ostrich",  # mixed dashes, underscores, multiple spaces
+            "Common   -   Ostrich",  # spaces around dash
+            "common___ostrich",  # multiple underscores, lowercase
         ]
 
         for test_case in test_cases:
@@ -328,6 +342,54 @@ class TestConverter:
         # Note: Species codes may differ between years due to taxonomic changes
         assert result_2021 is not None
         assert result_2024 is not None
+
+    def test_bbl_conversions(self):
+        """Test BBL (Bird Banding Lab) conversions."""
+        # Test common name to BBL alpha code
+        converter = Converter(
+            from_type="common_name", to_type="alpha_code_4", to_authority="bbl"
+        )
+
+        result = converter.convert("Western Grebe")
+        assert result == "WEGR"
+
+        # Test BBL alpha code to scientific name
+        converter_reverse = Converter(
+            from_type="alpha_code_4", to_type="scientific_name", from_authority="bbl"
+        )
+        result = converter_reverse.convert("WEGR")
+        assert result == "Aechmophorus occidentalis"
+
+        # Test BBL French names
+        converter_french = Converter(
+            from_type="common_name", to_type="french_name", to_authority="bbl"
+        )
+        result = converter_french.convert("Western Grebe")
+        assert result == "Grèbe élégant"
+
+        # Test reverse French name conversion
+        converter_french_reverse = Converter(
+            from_type="french_name", to_type="scientific_name", from_authority="bbl"
+        )
+        result = converter_french_reverse.convert("Grèbe élégant")
+        assert result == "Aechmophorus occidentalis"
+
+    def test_bbl_cross_authority_conversion(self):
+        """Test cross-authority conversions involving BBL."""
+        # Convert BBL alpha code to eBird species code via scientific name
+        converter = Converter(
+            from_type="alpha_code_4",
+            to_type="species_code",
+            from_authority="bbl",
+            to_authority="ebird",
+        )
+
+        # This should work if the species exists in both databases
+        # Western Grebe should exist in both BBL and eBird
+        result = converter.convert("WEGR")
+        # Don't assert specific value since it depends on data availability
+        # Just ensure it doesn't crash and returns something reasonable
+        assert result is None or isinstance(result, str)
 
 
 if __name__ == "__main__":

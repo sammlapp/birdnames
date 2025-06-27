@@ -134,6 +134,21 @@ Avilist: https://www.avilist.org/checklist/v2025/, download link: https://www.av
 Avilist columns: 
 Sequence	Taxon_rank	Order	Family	Family_English_name	Scientific_name	Authority	Bibliographic_details	English_name_AviList	English_name_Clements_v2024	English_name_BirdLife_v9	Proposal_number	Decision_summary	Range	Extinct_or_possibly_extinct	IUCN_Red_List_Category	BirdLife_DataZone_URL	Species_code_Cornell_Lab	Birds_of_the_World_URL	AvibaseID	Gender_of_genus	Type_species_of_genus
 
+
+BBL (Bird Banding Lab) 4 letter alpha codes:
+Tessa Rhinehart's Goldeneye extension provides [code](https://github.com/rhine3/goldeneye/blob/master/src/alpha-code-prep.ipynb) for parsing the php website: 
+
+The code below grabs the table from this website - https://www.pwrc.usgs.gov/BBL/Bander_Portal/login/speclist.php
+This requires installation of pandas and lxml
+```python
+[bbl_table] = pd.read_html("https://www.pwrc.usgs.gov/BBL/Bander_Portal/login/speclist.php")
+bbl_table = bbl_table[["Scientific Name","Common Name","Alpha Code","French Name", "T & E"]]
+bbl_table.columns = ['scientific_name','bbl_common_name','bbl_alpha_code_4', 'bbl_french_name']
+# bbl_table.to_csv("bbl-alpha-codes_2024.csv", index=False)
+```
+
+We'll need to manually create different year versions - I'm not sure if historical versions are available. 
+
 During ingestion: 
 1. retain the order and family information about each taxon
 "Order" and "Family" columns from Avilist; "Order" and "Family name" columns from BirdLife; "order" and "family" columns

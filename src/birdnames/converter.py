@@ -39,19 +39,19 @@ class Converter:
         Initialize converter with conversion parameters.
 
         Args:
-            from_type: Source name type ("common_name", "scientific_name", "alpha_code_4", "alpha_code_6", "species_code")
-            to_type: Target name type ("common_name", "scientific_name", "alpha_code_4", "alpha_code_6", "species_code")
-            from_authority: Source taxonomic authority ("avilist", "ebird", "birdlife", "ibp")
-            to_authority: Target taxonomic authority ("avilist", "ebird", "birdlife", "ibp")
+            from_type: Source name type ("common_name", "scientific_name", "alpha_code_4", "alpha_code_6", "species_code", "french_name")
+            to_type: Target name type ("common_name", "scientific_name", "alpha_code_4", "alpha_code_6", "species_code", "french_name")
+            from_authority: Source taxonomic authority ("avilist", "ebird", "birdlife", "ibp", "bbl")
+            to_authority: Target taxonomic authority ("avilist", "ebird", "birdlife", "ibp", "bbl")
             from_year: Year of source taxonomy (None = most recent)
             to_year: Year of target taxonomy (None = most recent)
             soft_matching: Handle case/spacing differences
-            fuzzy_matching: Handle typos (slower)
+            fuzzy_matching: Handle typos, finding the best match (slower)
         """
-        self.from_type = from_type
-        self.to_type = to_type
-        self.from_authority = from_authority
-        self.to_authority = to_authority
+        self.from_type = from_type.lower().strip()
+        self.to_type = to_type.lower().strip()
+        self.from_authority = from_authority.lower().strip()
+        self.to_authority = to_authority.lower().strip()
         self.from_year = from_year
         self.to_year = to_year
         self.soft_matching = soft_matching
@@ -119,14 +119,20 @@ class Converter:
         elif name_type == "genus":
             return "genus"
         elif name_type == "family":
+            if authority == "bbl":
+                raise ValueError(f"Family not available for {authority}")
             return f"{authority}_family"
         elif name_type == "order":
+            if authority == "bbl":
+                raise ValueError(f"Order not available for {authority}")
             return f"{authority}_order"
         elif name_type == "common_name":
             return f"{authority}_common_name"
         elif name_type == "alpha_code_4":
             if authority == "ibp":
                 return "ibp_alpha_code_4"
+            elif authority == "bbl":
+                return "bbl_alpha_code_4"
             else:
                 raise ValueError(f"4-letter alpha codes not available for {authority}")
         elif name_type == "alpha_code_6":
@@ -139,6 +145,11 @@ class Converter:
                 return "ebird_species_code"
             else:
                 raise ValueError(f"Species codes not available for {authority}")
+        elif name_type == "french_name":
+            if authority == "bbl":
+                return "bbl_french_name"
+            else:
+                raise ValueError(f"French names not available for {authority}")
         else:
             raise ValueError(f"Unknown name type: {name_type}")
 
@@ -149,7 +160,8 @@ class Converter:
         if self.soft_matching:
             # Replace multiple spaces, dashes, underscores with single space
             import re
-            normalized = re.sub(r'[-_\s]+', ' ', s)
+
+            normalized = re.sub(r"[-_\s]+", " ", s)
             return normalized.strip().lower()
         return s
 

@@ -22,7 +22,6 @@ def ingest_ebird_clements(file_path):
             "SCI_NAME": "scientific name",
             "ORDER1": "order",
             "FAMILY": "family",
-            
         }
     )
 
