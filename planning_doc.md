@@ -132,7 +132,7 @@ Note: for the 2021 taxonomy I used Microsoft Excel to convert to UTF-8 encoding
 
 Avilist: https://www.avilist.org/checklist/v2025/, download link: https://www.avilist.org/wp-content/uploads/2025/06/AviList-v2025-11Jun-extended.xlsx; File: AviList-v2025-11Jun-extended.xlsx ; 
 Avilist columns: 
-Sequence	Taxon_rank	Order	Family	Family_English_name	Scientific_name	Authority	Bibliographic_details	English_name_AviList	English_name_Clements_v2024	English_name_BirdLife_v9	Proposal_number	Decision_summary	Range	Extinct_or_possibly_extinct	IUCN_Red_List_Category	BirdLife_DataZone_URL	Species_code_Cornell_Lab	Birds_of_the_World_URL	AvibaseID	Gender_of_genus	Type_species_of_genus
+Sequence	Taxon_rank	Order	Family	Family_English_name	Scientific_name	Authority	Bibliographic_details	English_name_AviList	English_name_Clements_v2024	English_name_BirdLife_v9	Proposal_number	Decision_summary	Range	Extinct_or_possibly_extinct	IUCN_Red_List_Category	BirdLife_DataZone_URL	ebird_code_Cornell_Lab	Birds_of_the_World_URL	AvibaseID	Gender_of_genus	Type_species_of_genus
 
 
 BBL (Bird Banding Lab) 4 letter alpha codes:
@@ -143,7 +143,7 @@ This requires installation of pandas and lxml
 ```python
 [bbl_table] = pd.read_html("https://www.pwrc.usgs.gov/BBL/Bander_Portal/login/speclist.php")
 bbl_table = bbl_table[["Scientific Name","Common Name","Alpha Code","French Name", "T & E"]]
-bbl_table.columns = ['scientific_name','bbl_common_name','bbl_alpha_code_4', 'bbl_french_name']
+bbl_table.columns = ['scientific_name','bbl_common_name','bbl_alpha', 'bbl_french_name']
 # bbl_table.to_csv("bbl-alpha-codes_2024.csv", index=False)
 ```
 

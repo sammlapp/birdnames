@@ -8,11 +8,13 @@ previous years' data from the USGS site.
 
 import pandas as pd
 from pathlib import Path
+import datetime
 
 
 def fetch_bbl_data():
     """Fetch BBL data from USGS website and save to CSV."""
     print("Fetching BBL data from USGS website...")
+    year = datetime.datetime.now().year
 
     try:
         # Fetch the table from the BBL website
@@ -27,7 +29,7 @@ def fetch_bbl_data():
         bbl_table.columns = [
             "scientific_name",
             "bbl_common_name",
-            "bbl_alpha_code_4",
+            "bbl_alpha",
             "bbl_french_name",
             "bbl_threatened_endangered",
         ]
@@ -35,7 +37,7 @@ def fetch_bbl_data():
         # Clean up the data
         bbl_table["scientific_name"] = bbl_table["scientific_name"].str.strip()
         bbl_table["bbl_common_name"] = bbl_table["bbl_common_name"].str.strip()
-        bbl_table["bbl_alpha_code_4"] = bbl_table["bbl_alpha_code_4"].str.strip()
+        bbl_table["bbl_alpha"] = bbl_table["bbl_alpha"].str.strip()
 
         # Remove rows where scientific name is empty or NA
         bbl_table = bbl_table.dropna(subset=["scientific_name"])
@@ -44,11 +46,12 @@ def fetch_bbl_data():
         # Add genus column
         bbl_table["genus"] = bbl_table["scientific_name"].str.split().str[0]
 
-        # Save to processed data directory
-        data_dir = Path(__file__).parent.parent / "data" / "processed"
-        data_dir.mkdir(parents=True, exist_ok=True)
+        # Save to ./taxonomies/bbl/year/bbl_year_taxonomy.csv
+        # so that it can be ingested with ingest_taxonomies.py
+        out_dir = Path(__file__).parent / "taxonomies" / "bbl" / str(year)
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-        output_file = data_dir / "bbl_2024_taxonomy.csv"
+        output_file = out_dir / f"bbl_{year}_taxonomy.csv"
         bbl_table.to_csv(output_file, index=False)
 
         print(f"Successfully saved {len(bbl_table)} BBL records to {output_file}")

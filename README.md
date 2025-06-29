@@ -14,6 +14,7 @@ A Python package for managing avian taxonomy and converting between different bi
 ## Installation
 
 (until published on PyPI: pip install git+https://github.com/sammlapp/birdnames)
+
 ```bash
 pip install birdnames
 ```
@@ -36,7 +37,23 @@ print(result)  # "Turdus migratorius"
 
 ## Usage Examples
 
-### Common Name to Scientific Name
+### Convert a desired type from any starting type
+These functions find the best matching taxonomy and naming type for the input, and convert to the desired output
+
+```python
+
+import birdnames as bn
+bn.alpha(['American Robin','Northern Cardinal'])
+bn.scientific(['AMRO','NOCA'])
+bn.common(['AMRO','NOCA'])
+bn.ebird(['Cardinalis cardinalis'])
+```
+
+### Specify starting and ending name types 
+
+For example, Common Name to Scientific Name
+
+By default, AviList taxonomy is used
 
 ```python
 import birdnames as bn
@@ -44,7 +61,6 @@ import birdnames as bn
 converter = bn.Converter(
     from_type="common_name",
     to_type="scientific_name",
-    from_authority="avilist"
 )
 
 # Single conversion
@@ -64,7 +80,7 @@ print(scientific_names)
 # Convert common names to 4-letter alpha codes
 converter = bn.Converter(
     from_type="common_name",
-    to_type="alpha_code_4",
+    to_type="alpha",
     from_authority="avilist",
     to_authority="ibp"
 )
@@ -84,7 +100,7 @@ print(alpha_codes)  # ["AMRO", "BLJA", "NOCA"]
 # Convert to BBL 4-letter alpha codes
 converter = bn.Converter(
     from_type="common_name",
-    to_type="alpha_code_4",
+    to_type="alpha",
     to_authority="bbl"
 )
 
@@ -108,32 +124,34 @@ print(french_name)  # "Grèbe élégant"
 # Convert common names to eBird species codes
 converter = bn.Converter(
     from_type="common_name",
-    to_type="species_code",
+    to_type="ebird_code",
     from_authority="avilist",
     to_authority="ebird"
 )
 
-species_code = converter.convert("American Robin")
-print(species_code)  # "amero"
+ebird_code = converter.convert("American Robin")
+print(ebird_code)  # "amerob"
 
 # Batch conversion
 common_names = ["American Robin", "Blue Jay", "Northern Cardinal"]
-species_codes = converter.convert(common_names)
-print(species_codes)  # ["amero", "blujay", "norcar"]
+ebird_codes = converter.convert(common_names)
+print(ebird_codes)  # ["amerob", "blujay", "norcar"]
 ```
 
 ### Cross-Authority Conversions
+Specify the starting and ending authority, and optionally a specific year of the taxonomy to use. 
 
 ```python
 # Convert eBird species codes to IBP alpha codes
 converter = bn.Converter(
-    from_type="species_code",
-    to_type="alpha_code_4",
+    from_type="ebird_code",
+    to_type="alpha",
     from_authority="ebird",
-    to_authority="ibp"
+    to_authority="ibp",
+    from_year=2021
 )
 
-alpha_code = converter.convert("amero")
+alpha_code = converter.convert("amerob")
 print(alpha_code)  # "AMRO"
 ```
 
@@ -264,9 +282,9 @@ df[df["original_name"] != df["corrected_name"]]
 - `"genus"`: Genus names (e.g., "Turdus")
 - `"family"`: Family names (e.g., "Turdidae") - not available for BBL
 - `"order"`: Order names (e.g., "Passeriformes") - not available for BBL
-- `"alpha_code_4"`: 4-letter alpha codes (IBP and BBL, e.g., "AMRO", "WEGR")
-- `"alpha_code_6"`: 6-letter alpha codes (IBP only, e.g., "TURMIG")
-- `"species_code"`: eBird 6-letter species codes (eBird only, e.g., "amerob")
+- `"alpha"`: 4-letter alpha codes (IBP and BBL, e.g., "AMRO", "WEGR")
+- `"alpha6"`: 6-letter alpha codes (IBP only, e.g., "TURMIG")
+- `"ebird_code"`: eBird 6-letter species codes (eBird only, e.g., "amerob")
 - `"french_name"`: French common names (BBL only, e.g., "Grèbe élégant")
 
 ## Supported Taxonomic Authorities

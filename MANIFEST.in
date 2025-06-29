@@ -1,4 +1,4 @@
 include README.md
 include LICENSE
-recursive-include src/birdnames/data *.csv
+recursive-include birdnames/data *.csv
 recursive-include data/processed *.csv
