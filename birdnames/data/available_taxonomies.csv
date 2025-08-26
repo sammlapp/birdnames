@@ -1,0 +1,9 @@
+authority,year,scientific_name,common_name,alpha,alpha6,ebird_code,order,family,french_name,entries
+ebird,2022,True,True,False,False,True,True,True,False,10906
+ebird,2024,True,True,False,False,True,True,True,False,11145
+ebird,2023,True,True,False,False,True,True,True,False,11017
+ebird,2021,True,True,False,False,True,True,True,False,10824
+bbl,2025,True,True,True,False,False,False,False,True,1155
+avilist,2025,True,True,False,False,False,True,True,False,33684
+birdlife,2024,True,True,False,False,False,True,True,False,11195
+ibp,2024,True,True,True,True,False,False,False,False,2341

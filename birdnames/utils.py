@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 
 # load the available taxonomies from the CSV file into a dataframe
-package_dir = Path(__file__).parent.parent
+package_dir = Path(__file__).parent
 print(f"Package directory: {package_dir}")
 available_taxonomies_file = package_dir / "data" / "available_taxonomies.csv"
 TAXONOMIES = pd.read_csv(available_taxonomies_file)

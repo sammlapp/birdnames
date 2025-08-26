@@ -194,7 +194,7 @@ def discover_taxonomy_files():
 
 def main():
     """Main ingestion function."""
-    output_dir = Path(__file__).parent.parent / "data/processed"
+    output_dir = Path(__file__).parent.parent / "birdnames/data/processed"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Discover all taxonomy files

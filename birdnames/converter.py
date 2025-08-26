@@ -121,24 +121,17 @@ class Converter:
         Returns:
             Most recent year available as string
         """
-        data_dir = Path(__file__).parent.parent / "data" / "processed"
 
         # Find all files for this authority
-        authority_files = list(data_dir.glob(f"{authority}_*_taxonomy.csv"))
+        authority_files = TAXONOMIES[TAXONOMIES["authority"] == authority]
 
-        if not authority_files:
+        if authority_files.empty:
             raise FileNotFoundError(
                 f"No taxonomy files found for authority: {authority}"
             )
 
         # Extract years and find the most recent
-        years = []
-        for file in authority_files:
-            # File format: authority_year_taxonomy.csv
-            parts = file.stem.split("_")
-            if len(parts) >= 3:  # authority_year_taxonomy
-                year = parts[-2]
-                years.append(year)
+        years = authority_files["year"].unique().astype(int).tolist()
 
         if not years:
             raise FileNotFoundError(
