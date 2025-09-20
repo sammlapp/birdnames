@@ -19,4 +19,5 @@ __all__ = [
     "common",
     "ebird",
     "TAXONOMIES",
+    "list_taxonomies",
 ]
