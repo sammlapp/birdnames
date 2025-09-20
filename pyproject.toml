@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "birdnames"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Python package for managing avian taxonomy and converting between different bird name formats across multiple taxonomic authorities"
 authors = ["Sam Lapp <sam.lapp@pitt.edu>"]
 license = "MIT"

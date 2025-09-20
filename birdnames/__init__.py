@@ -10,7 +10,7 @@ from .converter import Converter, determine_name_type, alpha, scientific, common
 from .utils import TAXONOMIES, list_taxonomies
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = [
     "Converter",
     "determine_name_type",
