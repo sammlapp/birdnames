@@ -1,3 +1,5 @@
 tests/test.ipynb
 data_ingestion/taxonomies
 dist/
+birdnames/__pycache__/
+tests/__pycache__/

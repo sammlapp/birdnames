@@ -8,7 +8,7 @@ A Python package for managing avian taxonomy and converting between different bi
 - Support for multiple taxonomic authorities: AviList, eBird/Clements, BirdLife, and IBP
 - Cross-authority conversions using scientific names as bridge
 - Hierarchical conversions (species → genus → family → order)
-- Fuzzy matching for handling typos and variations
+- Optional fuzzy matching for handling typos and variations
 - Batch processing support for lists, numpy arrays, and pandas Series
 
 ## Installation
@@ -20,6 +20,20 @@ pip install birdnames
 ```
 
 ## Quick Start
+
+### Convert a desired type from any starting type
+These functions find the best matching taxonomy and naming type for the input, and convert to the desired output
+
+```python
+
+import birdnames as bn
+bn.alpha(['American Robin','Northern Cardinal'])
+bn.scientific(['AMRO','NOCA'])
+bn.common(['AMRO','NOCA'])
+bn.ebird(['Cardinalis cardinalis'])
+```
+### Use the Converter class for full control 
+You can specify the name format and taxonomy for the source and output
 
 ```python
 import birdnames as bn
@@ -36,18 +50,6 @@ print(result)  # "Turdus migratorius"
 ```
 
 ## Usage Examples
-
-### Convert a desired type from any starting type
-These functions find the best matching taxonomy and naming type for the input, and convert to the desired output
-
-```python
-
-import birdnames as bn
-bn.alpha(['American Robin','Northern Cardinal'])
-bn.scientific(['AMRO','NOCA'])
-bn.common(['AMRO','NOCA'])
-bn.ebird(['Cardinalis cardinalis'])
-```
 
 ### Specify starting and ending name types 
 
