@@ -3,11 +3,12 @@ Main Converter class for birdnames package.
 """
 
 import warnings
-import pandas as pd
-from pathlib import Path
-from typing import Tuple, Union, List, Optional
+from typing import List, Optional, Tuple, Union
+
 import numpy as np
-from .utils import fuzzy_match, TAXONOMIES, load_taxonomy, normalize_string
+import pandas as pd
+
+from .utils import TAXONOMIES, fuzzy_match, load_taxonomy, normalize_string
 
 
 def _get_column_name(name_type: str, authority: str) -> str:
@@ -87,7 +88,7 @@ class Converter:
         if from_col == to_col:
             self.lookup = source_taxonomy[[from_col]].copy()
             # Create a new column with different name temporarily for the identity mapping
-            self.lookup['_temp_col'] = self.lookup[from_col]
+            self.lookup["_temp_col"] = self.lookup[from_col]
         # if within a taxonomy: simply index=from and values=to
         # if converting to scientific name, we don't need to cross taxonomies
         elif to_col == "scientific_name" or same_taxonomy:
@@ -116,7 +117,7 @@ class Converter:
 
         # convert to a pd.Series for fast lookup
         # Use '_temp_col' if it exists (identity mapping case), otherwise use to_col
-        value_col = '_temp_col' if '_temp_col' in self.lookup.columns else to_col
+        value_col = "_temp_col" if "_temp_col" in self.lookup.columns else to_col
         self.lookup = self.lookup.set_index(from_col)[value_col]
 
     def _get_most_recent_year(self, authority: str) -> str:
@@ -450,7 +451,7 @@ def common(
     authorities_with_common_name = set(
         TAXONOMIES[TAXONOMIES["common_name"] == True]["authority"].values
     )
-    if not common_name_authority in authorities_with_common_name:
+    if common_name_authority not in authorities_with_common_name:
         raise ValueError(
             f"`common_name_authority` must be one of {authorities_with_common_name}. Got {common_name_authority}."
         )
