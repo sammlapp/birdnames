@@ -395,6 +395,35 @@ class TestConverter:
         # Just ensure it doesn't crash and returns something reasonable
         assert result is None or isinstance(result, str)
 
+    def test_identity_conversion(self):
+        """Test converting from a type to the same type (identity mapping)."""
+        # Test scientific name to scientific name
+        converter = Converter(
+            from_type="scientific_name",
+            to_type="scientific_name",
+            from_authority="avilist",
+            to_authority="avilist",
+        )
+
+        result = converter.convert("Struthio camelus")
+        assert result == "Struthio camelus"
+
+        # Test with list
+        result_list = converter.convert(["Struthio camelus", "Struthio molybdophanes"])
+        assert result_list == ["Struthio camelus", "Struthio molybdophanes"]
+
+        # Test common name to common name
+        converter_common = Converter(
+            from_type="common_name",
+            to_type="common_name",
+            from_authority="avilist",
+            to_authority="avilist",
+        )
+
+        result = converter_common.convert("Common Ostrich")
+        assert result == "Common Ostrich"
+
+
 
 def test_determine_name_type():
     """Test automatic detection of name type and authority."""
@@ -460,6 +489,15 @@ def test_scientific():
 
     # test with ebird codes
     assert birdnames.scientific(["norcar"]) == ["Cardinalis cardinalis"]
+
+    # test with scientific names (issue fix: should return input as-is)
+    scientific_names = ["Struthio camelus", "Struthio molybdophanes"]
+    result = birdnames.scientific(scientific_names)
+    assert result == ["Struthio camelus", "Struthio molybdophanes"]
+
+    # test with single scientific name
+    result = birdnames.scientific("Struthio camelus")
+    assert result == "Struthio camelus"
 
 
 def test_common():

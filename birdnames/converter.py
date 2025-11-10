@@ -83,10 +83,15 @@ class Converter:
         # create pd.Series for mapping from one name type to another
         source_taxonomy = load_taxonomy(from_authority, from_year)
         same_taxonomy = to_authority == from_authority and to_year == from_year
+        # if converting to the same type, create identity mapping
+        if from_col == to_col:
+            self.lookup = source_taxonomy[[from_col]].copy()
+            # Create a new column with different name temporarily for the identity mapping
+            self.lookup['_temp_col'] = self.lookup[from_col]
         # if within a taxonomy: simply index=from and values=to
         # if converting to scientific name, we don't need to cross taxonomies
-        if to_col == "scientific_name" or same_taxonomy:
-            self.lookup = source_taxonomy[[from_col, to_col]]
+        elif to_col == "scientific_name" or same_taxonomy:
+            self.lookup = source_taxonomy[[from_col, to_col]].copy()
         else:
             # dest_cols = [to_col] if to_col != "scientific_name" else []
             dest_taxonomy = load_taxonomy(to_authority, to_year).set_index(
@@ -97,7 +102,7 @@ class Converter:
             self.lookup = source_taxonomy.set_index("scientific_name")[
                 source_cols
             ].join(dest_taxonomy)
-            self.lookup = self.lookup.reset_index(drop=False)[[from_col, to_col]]
+            self.lookup = self.lookup.reset_index(drop=False)[[from_col, to_col]].copy()
 
         # if soft matching, apply normalization to source column
         if soft_matching:
@@ -110,7 +115,9 @@ class Converter:
         self.lookup = self.lookup.drop_duplicates(subset=[from_col])
 
         # convert to a pd.Series for fast lookup
-        self.lookup = self.lookup.set_index(from_col)[to_col]
+        # Use '_temp_col' if it exists (identity mapping case), otherwise use to_col
+        value_col = '_temp_col' if '_temp_col' in self.lookup.columns else to_col
+        self.lookup = self.lookup.set_index(from_col)[value_col]
 
     def _get_most_recent_year(self, authority: str) -> str:
         """Get the most recent year available for an authority.
