@@ -356,6 +356,13 @@ This will process the raw taxonomy files and create standardized CSV files for t
 pytest tests/
 ```
 
+## Release 
+- run `poetry lock` to update lock file matching dependencies in `pyproject.toml`
+- run tests with pytest
+- update version nmber in `pyproject.toml`
+- add tag with new version number
+- publish to PyPi with twine
+
 ## License
 
 MIT License
